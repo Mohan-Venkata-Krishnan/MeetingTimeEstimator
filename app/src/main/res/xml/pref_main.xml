@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <PreferenceCategory android:title="Total Hours Spent Meter">
+        <EditTextPreference
+            android:defaultValue="8"
+            android:key="default_daily_hours"
+            android:summary="1"
+            android:inputType="number"
+            android:title="Enter your daily working hours" />
+
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="default_acceptance_criteria"
+            android:title="Include Only Accepted Events" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Time Consuming Events Graph">
+        <EditTextPreference
+            android:layout_height="match_parent"
+            android:defaultValue="10"
+            android:inputType="number"
+            android:key="max_x_axis_events"
+            android:summary="10"
+            android:title="Maximum Number of Events in X Axis" />
+    </PreferenceCategory>
+
+</PreferenceScreen>
+
