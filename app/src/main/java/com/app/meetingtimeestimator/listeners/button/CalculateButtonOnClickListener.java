@@ -4,17 +4,26 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.OrientationHelper;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.app.meetingtimeestimator.R;
+import com.app.meetingtimeestimator.adapter.BarChartModel;
+import com.app.meetingtimeestimator.adapter.BaseModel;
+import com.app.meetingtimeestimator.adapter.LineChartModel;
+import com.app.meetingtimeestimator.adapter.MultiViewTypeAdapter;
+import com.app.meetingtimeestimator.adapter.SpeedMeterModel;
 import com.app.meetingtimeestimator.dto.CalendarEventEstimatorDTO;
 import com.app.meetingtimeestimator.resource.ProcessCalendarEventResource;
-import com.app.meetingtimeestimator.visualizer.TotalConfirmedWorkingHoursVisualizer;
-import com.app.meetingtimeestimator.visualizer.TotalEventsVisualizer;
-import com.app.meetingtimeestimator.visualizer.TotalWorkingHoursVisualizer;
-import com.github.anastr.speedviewlib.TubeSpeedometer;
-import com.github.mikephil.charting.charts.BarChart;
+
+import java.util.ArrayList;
+
 
 public class CalculateButtonOnClickListener implements View.OnClickListener {
 
@@ -28,6 +37,7 @@ public class CalculateButtonOnClickListener implements View.OnClickListener {
         this.activity = activity;
         this.calendarEventEstimatorDTO = calendarEventEstimatorDTO;
         this.processCalendarEventResource = processCalendarEventResource;
+
     }
 
     @Override
@@ -42,48 +52,101 @@ public class CalculateButtonOnClickListener implements View.OnClickListener {
     // Set Calculated Data
     private void setDataIntoView(CalendarEventEstimatorDTO calendarEventEstimatorDTO, ProcessCalendarEventResource processCalendarEventResource) {
 
-        BarChart linearChart = activity.findViewById(R.id.linear_chart);
-        View horizontalLineTwo = activity.findViewById(R.id.horizontal_line_2);
-        TextView topTimeEventsText = activity.findViewById(R.id.top_time_events_text);
-        TextView totalTimeSpentText = activity.findViewById(R.id.total_time_spent_text);
-        BarChart linearConfirmedChart = activity.findViewById(R.id.linear_confirmed_chart);
-        TextView topTimeConfirmedEventsText = activity.findViewById(R.id.top_time_confirmed_events_text);
-        TubeSpeedometer tubeSpeedometer = activity.findViewById(R.id.confirmed_meeting_time);
+        CardView cardView1 = activity.findViewById(R.id.card_view_1);
+        LinearLayout linearLayoutCard = activity.findViewById(R.id.card_view_layout);
+
+        TextView totalMeetings = activity.findViewById(R.id.total_meetings_text);
+        TextView totalAcceptedMeetings = activity.findViewById(R.id.total_accepted_meetings_text);
+        TextView totalDeclinedMeetings = activity.findViewById(R.id.total_declined_meetings_text);
 
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
         Long defaultDailyHours = Long.parseLong(settings.getString("default_daily_hours", "8"));
         Integer maxXAxisEvents = Integer.parseInt(settings.getString("max_x_axis_events", "10"));
         Boolean defaultAcceptanceCriteria = settings.getBoolean("default_acceptance_criteria", true);
 
-        tubeSpeedometer.setMinSpeed(0);
-        tubeSpeedometer.setUnit("Hour(s)");
-
         Long totalMeetingTimeInHours = calendarEventEstimatorDTO.getTotalMeetingTimeInMillis() / (1000 * 60);
         float confirmedMeetingTimeInHours = calendarEventEstimatorDTO.getConfirmedMeetingTimeInMillis() / (1000f * 60f * 60f);
         float totalTimeInHours = (processCalendarEventResource.getToDateInMillis() - processCalendarEventResource.getFromDateInMillis()) / (1000f * 60f * 60f);
 
+        cardView1.setVisibility(View.GONE);
+        linearLayoutCard.setVisibility(View.GONE);
+
+        ArrayList<BaseModel> dataList = new ArrayList();
         if (totalMeetingTimeInHours <= 0 || confirmedMeetingTimeInHours <= 0) {
-            TotalWorkingHoursVisualizer.clearChartData(tubeSpeedometer);
-            TotalEventsVisualizer.clearChartData(linearChart, topTimeEventsText);
-            TotalConfirmedWorkingHoursVisualizer.clearChartData(linearConfirmedChart, topTimeConfirmedEventsText, horizontalLineTwo);
+            setRecycleViewAdapter(dataList);
             return;
         }
 
         float totalDays = totalTimeInHours / 24f;
         float totalWorkingHours = totalDays * defaultDailyHours;
-        TotalWorkingHoursVisualizer.renderChartData(tubeSpeedometer, totalWorkingHours, totalTimeSpentText, defaultAcceptanceCriteria, confirmedMeetingTimeInHours);
+        SpeedMeterModel speedMeterModel = new SpeedMeterModel();
+        speedMeterModel.setTotalWorkingHours(totalWorkingHours);
+        speedMeterModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+        speedMeterModel.setConfirmedMeetingTimeInHours(confirmedMeetingTimeInHours);
+        dataList.add(new BaseModel(BaseModel.METER_TYPE, speedMeterModel));
 
-        if (null != calendarEventEstimatorDTO.getTotalCalendarNameCountMap()) {
-            TotalEventsVisualizer.renderChartData(linearChart, topTimeEventsText, maxXAxisEvents, calendarEventEstimatorDTO.getTotalCalendarNameCountMap());
-        } else {
-            TotalEventsVisualizer.clearChartData(linearChart, topTimeEventsText);
+        if (!defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getTotalCalendarTimeMap() && calendarEventEstimatorDTO.getTotalCalendarTimeMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            LineChartModel lineChartModel = new LineChartModel();
+            lineChartModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            lineChartModel.setCalendarTimeMap(calendarEventEstimatorDTO.getTotalCalendarTimeMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.LINE_CHART_TYPE, lineChartModel));
         }
 
-        if (null != calendarEventEstimatorDTO.getConfirmedCalendarNameCountMap()) {
-            TotalConfirmedWorkingHoursVisualizer.renderChartData(linearConfirmedChart, topTimeConfirmedEventsText, maxXAxisEvents, horizontalLineTwo, calendarEventEstimatorDTO.getConfirmedCalendarNameCountMap());
-        } else {
-            TotalConfirmedWorkingHoursVisualizer.clearChartData(linearConfirmedChart, topTimeConfirmedEventsText, horizontalLineTwo);
+        if (defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getConfirmedCalendarTimeMap() && calendarEventEstimatorDTO.getConfirmedCalendarTimeMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            LineChartModel lineChartModel = new LineChartModel();
+            lineChartModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            lineChartModel.setCalendarTimeMap(calendarEventEstimatorDTO.getConfirmedCalendarTimeMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.LINE_CHART_TYPE, lineChartModel));
         }
+
+        if (!defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getTotalCalendarNameCountMap() && calendarEventEstimatorDTO.getTotalCalendarNameCountMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            BarChartModel barChartModel = new BarChartModel();
+            barChartModel.setMaxXAxisEvents(maxXAxisEvents);
+            barChartModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            barChartModel.setCalendarNameCountMap(calendarEventEstimatorDTO.getTotalCalendarNameCountMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.BAR_CHART_TYPE, barChartModel));
+        }
+
+        if (defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getConfirmedCalendarNameCountMap() && calendarEventEstimatorDTO.getConfirmedCalendarNameCountMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            BarChartModel barChartModel = new BarChartModel();
+            barChartModel.setMaxXAxisEvents(maxXAxisEvents);
+            barChartModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            barChartModel.setCalendarNameCountMap(calendarEventEstimatorDTO.getConfirmedCalendarNameCountMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.BAR_CHART_TYPE, barChartModel));
+        }
+
+        setRecycleViewAdapter(dataList);
+
+    }
+
+    private void setRecycleViewAdapter(ArrayList<BaseModel> dataList) {
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(activity.getApplicationContext(), OrientationHelper.HORIZONTAL, false);
+        MultiViewTypeAdapter adapter = new MultiViewTypeAdapter(dataList, activity.getApplicationContext());
+
+        final RecyclerView recyclerView = activity.findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(adapter);
     }
 
 

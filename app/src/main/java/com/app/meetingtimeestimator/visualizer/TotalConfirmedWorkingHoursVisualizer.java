@@ -17,8 +17,16 @@ import java.util.Map;
 
 public class TotalConfirmedWorkingHoursVisualizer {
 
-    public static void renderChartData(BarChart linearConfirmedChart, TextView topTimeConfirmedEventsText, Integer maxXAxisEvents, View horizontalLineTwo, HashMap<String, Integer> confirmedCalendarNameCountMap) {
-        topTimeConfirmedEventsText.setText("Top " + maxXAxisEvents + " Time Consuming Events - Accepted");
+    public static void renderChartData(BarChart linearConfirmedChart,
+                                       TextView topTimeConfirmedEventsText,
+                                       boolean defaultAcceptanceCriteria,
+                                       Integer maxXAxisEvents,
+                                       HashMap<String, Integer> confirmedCalendarNameCountMap) {
+        if (defaultAcceptanceCriteria) {
+            topTimeConfirmedEventsText.setText("Top " + maxXAxisEvents + " Time Consuming - Accepted Events");
+        } else {
+            topTimeConfirmedEventsText.setText("Top " + maxXAxisEvents + " Time Consuming - Overall Events");
+        }
         topTimeConfirmedEventsText.setVisibility(View.VISIBLE);
         ArrayList<BarEntry> barEntries = new ArrayList<>();
         ArrayList<String> xAxisLabels = new ArrayList<>();
@@ -39,20 +47,13 @@ public class TotalConfirmedWorkingHoursVisualizer {
         xAxis.setLabelRotationAngle(90f);
         xAxis.setValueFormatter(new IndexAxisValueFormatter(xAxisLabels));
 
-        BarDataSet barDataSet = new BarDataSet(barEntries, "Count of Accepted Events");
+        BarDataSet barDataSet = new BarDataSet(barEntries, null);
         BarData barData = new BarData(barDataSet);
         linearConfirmedChart.setExtraTopOffset(10f);
         linearConfirmedChart.setData(barData);
+        linearConfirmedChart.getLegend().setEnabled(false);
         linearConfirmedChart.setDescription(null);
-        horizontalLineTwo.setVisibility(View.VISIBLE);
-        linearConfirmedChart.animateXY(500, 500);
-    }
-
-    public static void clearChartData(BarChart linearConfirmedChart, TextView topTimeConfirmedEventsText, View horizontalLineTwo) {
-        horizontalLineTwo.setVisibility(View.GONE);
-        topTimeConfirmedEventsText.setVisibility(View.GONE);
-        linearConfirmedChart.setData(null);
-        linearConfirmedChart.invalidate();
+        linearConfirmedChart.animateXY(1000, 1000);
     }
 
 }

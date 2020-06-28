@@ -28,7 +28,6 @@ import com.app.meetingtimeestimator.preferences.SettingsActivity;
 import com.app.meetingtimeestimator.resource.GetCalendarEventResource;
 import com.app.meetingtimeestimator.resource.ProcessCalendarEventResource;
 import com.app.meetingtimeestimator.utils.FromAndToUtils;
-import com.github.mikephil.charting.charts.BarChart;
 import com.jaredrummler.materialspinner.MaterialSpinner;
 
 import java.util.Arrays;
@@ -53,8 +52,6 @@ public class MainActivity extends AppCompatActivity {
 
         // View Elements
         Toolbar toolbar = findViewById(R.id.toolbar);
-        BarChart barChart = findViewById(R.id.linear_chart);
-        BarChart barConfirmedChart = findViewById(R.id.linear_confirmed_chart);
         Button calculateButton = findViewById(R.id.calculate);
         EditText toDatePicker = findViewById(R.id.to_date_picker);
         EditText fromDatePicker = findViewById(R.id.from_date_picker);
@@ -65,10 +62,6 @@ public class MainActivity extends AppCompatActivity {
         // Set Toolbar
         setSupportActionBar(toolbar);
         getSupportActionBar().setTitle("Calendar Analytics");
-
-        // Pre Chart Logic
-        barChart.setNoDataText("");
-        barConfirmedChart.setNoDataText("");
 
         // Request Permission
         if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_DENIED) {
@@ -122,6 +115,9 @@ public class MainActivity extends AppCompatActivity {
         Calendar toCalendar = Calendar.getInstance();
         DatePickerDialog.OnDateSetListener toDateSetListener = new DatePickerOnSetListener(false, this, toCalendar, toDatePicker, processCalendarEventResource);
         toDatePicker.setOnClickListener(new DatePickerOnClickListener(this, toCalendar, toDateSetListener));
+
+        // Initiate a dummy click
+        calculateButton.callOnClick();
     }
 
     @Override

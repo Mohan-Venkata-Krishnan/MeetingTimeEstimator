@@ -11,7 +11,11 @@ import android.provider.CalendarContract;
 
 import com.app.meetingtimeestimator.dto.CalendarEventEstimatorDTO;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import static com.app.meetingtimeestimator.constants.CalendarURIConstants.WHEN_INSTANCES_URI;
 
@@ -31,8 +35,14 @@ public class ProcessCalendarEventResource {
 
     public CalendarEventEstimatorDTO getAllEventData(String id, Context context) {
 
+        int totalNoOfMeetings = 0;
+        int confirmedNoOfMeetings = 0;
+        int declinedNoOfMeetings = 0;
+
         HashMap<String, Integer> totalCalendarNameCountMap = new HashMap<>();
         HashMap<String, Integer> confirmedCalendarNameCountMap = new HashMap<>();
+        LinkedHashMap<String, Float> confirmedCalendarTimeMap = new LinkedHashMap<>();
+        LinkedHashMap<String, Float> totalCalendarTimeMap = new LinkedHashMap<>();
 
         Uri.Builder builder = WHEN_INSTANCES_URI.buildUpon();
 
@@ -57,6 +67,11 @@ public class ProcessCalendarEventResource {
                     String beginTimeStr = eventCursor.getString(1);
                     String endTimeStr = eventCursor.getString(2);
 
+                    Calendar calendar = Calendar.getInstance();
+                    calendar.setTimeInMillis(Long.parseLong(beginTimeStr));
+                    DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
+                    String currentDate = format.format(calendar.getTime());
+
                     long beginTimeInMillis = Long.parseLong(beginTimeStr);
                     long endTimeInMillis = Long.parseLong(endTimeStr);
 
@@ -67,6 +82,13 @@ public class ProcessCalendarEventResource {
                         totalCalendarNameCountMap.put(title, 1);
                     }
 
+                    Float meetingTime = (endTimeInMillis - beginTimeInMillis) / (1000f * 60f * 60f);
+                    if (totalCalendarTimeMap.containsKey(currentDate)) {
+                        float currentValue = totalCalendarTimeMap.get(currentDate);
+                        totalCalendarTimeMap.put(currentDate, currentValue + meetingTime);
+                    } else {
+                        totalCalendarTimeMap.put(currentDate, meetingTime);
+                    }
 
                     int selfAttendeeStatus = Integer.parseInt(eventCursor.getString(3));
                     if (selfAttendeeStatus == CalendarContract.Instances.STATUS_CONFIRMED) {
@@ -77,8 +99,19 @@ public class ProcessCalendarEventResource {
                         } else {
                             confirmedCalendarNameCountMap.put(title, 1);
                         }
-                    }
+                        if (confirmedCalendarTimeMap.containsKey(currentDate)) {
+                            float currentValue = confirmedCalendarTimeMap.get(currentDate);
+                            confirmedCalendarTimeMap.put(currentDate, currentValue + meetingTime);
+                        } else {
+                            confirmedCalendarTimeMap.put(currentDate, meetingTime);
+                        }
 
+                        confirmedNoOfMeetings++;
+                    }
+                    if(selfAttendeeStatus == CalendarContract.Instances.STATUS_CANCELED) {
+                        declinedNoOfMeetings++;
+                    }
+                    totalNoOfMeetings++;
                     totalMeetingTimeInMillis += (endTimeInMillis - beginTimeInMillis);
                 } while (eventCursor.moveToNext());
             }
@@ -88,9 +121,14 @@ public class ProcessCalendarEventResource {
         }
         CalendarEventEstimatorDTO calendarEventEstimatorDTO = new CalendarEventEstimatorDTO();
         calendarEventEstimatorDTO.setTotalMeetingTimeInMillis(totalMeetingTimeInMillis);
+        calendarEventEstimatorDTO.setTotalNoOfMeetings(totalNoOfMeetings);
+        calendarEventEstimatorDTO.setConfirmedNoOfMeetings(confirmedNoOfMeetings);
+        calendarEventEstimatorDTO.setDeclinedNoOfMeetings(declinedNoOfMeetings);
         calendarEventEstimatorDTO.setConfirmedMeetingTimeInMillis(confirmedMeetingTimeInMillis);
         calendarEventEstimatorDTO.setConfirmedCalendarNameCountMap(confirmedCalendarNameCountMap);
         calendarEventEstimatorDTO.setTotalCalendarNameCountMap(totalCalendarNameCountMap);
+        calendarEventEstimatorDTO.setConfirmedCalendarTimeMap(confirmedCalendarTimeMap);
+        calendarEventEstimatorDTO.setTotalCalendarTimeMap(totalCalendarTimeMap);
         return calendarEventEstimatorDTO;
     }
 

@@ -69,7 +69,7 @@ public class FromAndToUtils {
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis(currentTimeInMillis);
                     int i = calendar.get(Calendar.DAY_OF_WEEK) - calendar.getFirstDayOfWeek();
-                    calendar.add(Calendar.DATE, -i + 1);
+                    calendar.add(Calendar.DATE, -i - 30);
                     processCalendarEventResource.setFromDateInMillis(atStartOfDay(calendar.getTime()).getTime());
                     calendar.add(Calendar.DATE, 29);
                     processCalendarEventResource.setToDateInMillis(atEndOfDay(calendar.getTime()).getTime());
