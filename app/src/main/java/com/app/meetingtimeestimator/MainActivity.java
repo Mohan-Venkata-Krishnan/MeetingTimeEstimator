@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.app.meetingtimeestimator.dto.CalendarEventEstimatorDTO;
 import com.app.meetingtimeestimator.listeners.button.CalculateButtonOnClickListener;
@@ -72,6 +73,11 @@ public class MainActivity extends AppCompatActivity {
         // Get Available Calendars
         GetCalendarEventResource contentResolver = new GetCalendarEventResource(getApplicationContext());
         calendarNameIdMap = contentResolver.getCalendars();
+        if (null == calendarNameIdMap || calendarNameIdMap.size() == 0) {
+            Toast.makeText(this, "Could not find any calendars synced to your device", Toast.LENGTH_LONG).show();
+            return;
+        }
+
 
         // Populate Calendar Material Spinner
         Set<String> syncedCalendarSet = calendarNameIdMap.keySet();
