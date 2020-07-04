@@ -18,6 +18,7 @@ import com.app.meetingtimeestimator.adapter.BarChartModel;
 import com.app.meetingtimeestimator.adapter.BaseModel;
 import com.app.meetingtimeestimator.adapter.LineChartModel;
 import com.app.meetingtimeestimator.adapter.MultiViewTypeAdapter;
+import com.app.meetingtimeestimator.adapter.BarChartOwnerModel;
 import com.app.meetingtimeestimator.adapter.SpeedMeterModel;
 import com.app.meetingtimeestimator.dto.CalendarEventEstimatorDTO;
 import com.app.meetingtimeestimator.resource.ProcessCalendarEventResource;
@@ -133,6 +134,30 @@ public class CalculateButtonOnClickListener implements View.OnClickListener {
             totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
             totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
             dataList.add(new BaseModel(BaseModel.BAR_CHART_TYPE, barChartModel));
+        }
+
+        if (!defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getTotalCalendarOwnerCountMap() && calendarEventEstimatorDTO.getTotalCalendarOwnerCountMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            BarChartOwnerModel barChartOwnerModel = new BarChartOwnerModel();
+            barChartOwnerModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            barChartOwnerModel.setCalendarOwnerCountMap(calendarEventEstimatorDTO.getTotalCalendarOwnerCountMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.BAR_CHART_TYPE_OWNER, barChartOwnerModel));
+        }
+
+        if (defaultAcceptanceCriteria && null != calendarEventEstimatorDTO.getConfirmedCalendarOwnerCountMap() && calendarEventEstimatorDTO.getConfirmedCalendarOwnerCountMap().size() > 0) {
+            cardView1.setVisibility(View.VISIBLE);
+            linearLayoutCard.setVisibility(View.VISIBLE);
+            BarChartOwnerModel barChartOwnerModel = new BarChartOwnerModel();
+            barChartOwnerModel.setDefaultAcceptanceCriteria(defaultAcceptanceCriteria);
+            barChartOwnerModel.setCalendarOwnerCountMap(calendarEventEstimatorDTO.getConfirmedCalendarOwnerCountMap());
+            totalMeetings.setText("Total Meetings Scheduled : " + calendarEventEstimatorDTO.getTotalNoOfMeetings());
+            totalAcceptedMeetings.setText("Accepted : " + calendarEventEstimatorDTO.getConfirmedNoOfMeetings());
+            totalDeclinedMeetings.setText("Declined : " + calendarEventEstimatorDTO.getDeclinedNoOfMeetings());
+            dataList.add(new BaseModel(BaseModel.BAR_CHART_TYPE_OWNER, barChartOwnerModel));
         }
 
         setRecycleViewAdapter(dataList);

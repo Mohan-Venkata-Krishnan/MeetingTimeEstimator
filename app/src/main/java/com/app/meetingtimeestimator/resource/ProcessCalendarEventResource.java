@@ -41,6 +41,8 @@ public class ProcessCalendarEventResource {
 
         HashMap<String, Integer> totalCalendarNameCountMap = new HashMap<>();
         HashMap<String, Integer> confirmedCalendarNameCountMap = new HashMap<>();
+        HashMap<String, Integer> totalCalendarOwnerCountMap = new HashMap<>();
+        HashMap<String, Integer> confirmedCalendarOwnerCountMap = new HashMap<>();
         LinkedHashMap<String, Float> confirmedCalendarTimeMap = new LinkedHashMap<>();
         LinkedHashMap<String, Float> totalCalendarTimeMap = new LinkedHashMap<>();
 
@@ -51,9 +53,10 @@ public class ProcessCalendarEventResource {
 
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
         Boolean defaultAcceptanceCriteria = settings.getBoolean("default_acceptance_criteria", true);
+        Boolean excludeSelfScheduled = settings.getBoolean("default_self_scheduled", true);
 
         Cursor eventCursor = contentResolver.query(builder.build(),
-                new String[]{"title", "begin", "end", "selfAttendeeStatus"}, CalendarContract.Instances.CALENDAR_ID + "=" + id,
+                new String[]{"title", "begin", "end", "selfAttendeeStatus", "organizer", "isOrganizer"}, CalendarContract.Instances.CALENDAR_ID + "=" + id,
                 null, "startDay ASC, startMinute ASC");
 
         long totalMeetingTimeInMillis = -1L;
@@ -66,6 +69,9 @@ public class ProcessCalendarEventResource {
                     String title = eventCursor.getString(0);
                     String beginTimeStr = eventCursor.getString(1);
                     String endTimeStr = eventCursor.getString(2);
+                    String selfAttendeeStatusString = eventCursor.getString(3);
+                    String eventOwner = eventCursor.getString(4);
+                    String isSelfOwner = eventCursor.getString(5);
 
                     Calendar calendar = Calendar.getInstance();
                     calendar.setTimeInMillis(Long.parseLong(beginTimeStr));
@@ -90,7 +96,20 @@ public class ProcessCalendarEventResource {
                         totalCalendarTimeMap.put(currentDate, meetingTime);
                     }
 
-                    int selfAttendeeStatus = Integer.parseInt(eventCursor.getString(3));
+                    boolean shouldIncludeSelfScheduled = true;
+                    if (excludeSelfScheduled && ("1".equals(isSelfOwner))) {
+                        shouldIncludeSelfScheduled = false;
+                    }
+                    if (shouldIncludeSelfScheduled) {
+                        if (totalCalendarOwnerCountMap.containsKey(eventOwner)) {
+                            int currentValue = totalCalendarOwnerCountMap.get(eventOwner);
+                            totalCalendarOwnerCountMap.put(eventOwner, ++currentValue);
+                        } else {
+                            totalCalendarOwnerCountMap.put(eventOwner, 1);
+                        }
+                    }
+
+                    int selfAttendeeStatus = Integer.parseInt(selfAttendeeStatusString);
                     if (selfAttendeeStatus == CalendarContract.Instances.STATUS_CONFIRMED) {
                         confirmedMeetingTimeInMillis += (endTimeInMillis - beginTimeInMillis);
                         if (confirmedCalendarNameCountMap.containsKey(title)) {
@@ -99,6 +118,7 @@ public class ProcessCalendarEventResource {
                         } else {
                             confirmedCalendarNameCountMap.put(title, 1);
                         }
+
                         if (confirmedCalendarTimeMap.containsKey(currentDate)) {
                             float currentValue = confirmedCalendarTimeMap.get(currentDate);
                             confirmedCalendarTimeMap.put(currentDate, currentValue + meetingTime);
@@ -106,9 +126,17 @@ public class ProcessCalendarEventResource {
                             confirmedCalendarTimeMap.put(currentDate, meetingTime);
                         }
 
+                        if (shouldIncludeSelfScheduled) {
+                            if (confirmedCalendarOwnerCountMap.containsKey(eventOwner)) {
+                                int currentValue = confirmedCalendarOwnerCountMap.get(eventOwner);
+                                confirmedCalendarOwnerCountMap.put(eventOwner, ++currentValue);
+                            } else {
+                                confirmedCalendarOwnerCountMap.put(eventOwner, 1);
+                            }
+                        }
                         confirmedNoOfMeetings++;
                     }
-                    if(selfAttendeeStatus == CalendarContract.Instances.STATUS_CANCELED) {
+                    if (selfAttendeeStatus == CalendarContract.Instances.STATUS_CANCELED) {
                         declinedNoOfMeetings++;
                     }
                     totalNoOfMeetings++;
@@ -129,6 +157,8 @@ public class ProcessCalendarEventResource {
         calendarEventEstimatorDTO.setTotalCalendarNameCountMap(totalCalendarNameCountMap);
         calendarEventEstimatorDTO.setConfirmedCalendarTimeMap(confirmedCalendarTimeMap);
         calendarEventEstimatorDTO.setTotalCalendarTimeMap(totalCalendarTimeMap);
+        calendarEventEstimatorDTO.setTotalCalendarOwnerCountMap(totalCalendarOwnerCountMap);
+        calendarEventEstimatorDTO.setConfirmedCalendarOwnerCountMap(confirmedCalendarOwnerCountMap);
         return calendarEventEstimatorDTO;
     }
 

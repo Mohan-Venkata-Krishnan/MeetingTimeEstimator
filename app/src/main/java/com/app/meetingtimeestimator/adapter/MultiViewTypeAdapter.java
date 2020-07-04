@@ -6,10 +6,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.app.meetingtimeestimator.R;
 import com.app.meetingtimeestimator.visualizer.TotalConfirmedWorkingHoursVisualizer;
+import com.app.meetingtimeestimator.visualizer.TotalOwnerCountVisualizer;
 import com.app.meetingtimeestimator.visualizer.TotalTimeVisualizer;
 import com.app.meetingtimeestimator.visualizer.TotalWorkingHoursVisualizer;
 import com.github.anastr.speedviewlib.TubeSpeedometer;
@@ -55,6 +57,13 @@ public class MultiViewTypeAdapter extends RecyclerView.Adapter {
         }
     }
 
+    public static class BarChartTypeOwnerHolder extends RecyclerView.ViewHolder {
+
+        public BarChartTypeOwnerHolder(@NonNull View itemView) {
+            super(itemView);
+        }
+    }
+
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
@@ -77,6 +86,11 @@ public class MultiViewTypeAdapter extends RecyclerView.Adapter {
             case BaseModel.LINE_CHART_TYPE: {
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.linechart_type, parent, false);
                 return new LineChartTypeHolder(view);
+            }
+
+            case BaseModel.BAR_CHART_TYPE_OWNER: {
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.barchartowner_type, parent, false);
+                return new BarChartTypeOwnerHolder(view);
             }
         }
 
@@ -117,6 +131,16 @@ public class MultiViewTypeAdapter extends RecyclerView.Adapter {
                             baseModel.lineChartModel.getCalendarTimeMap());
                     break;
                 }
+                case BaseModel.BAR_CHART_TYPE_OWNER: {
+                    TextView textView = holder.itemView.findViewById(R.id.top_owner_events_text);
+                    LinearLayout linearLayout = holder.itemView.findViewById(R.id.owner_linear_layout);
+                    TotalOwnerCountVisualizer.renderChartData(textView,
+                            linearLayout,
+                            mContext,
+                            baseModel.barChartOwnerModel.isDefaultAcceptanceCriteria(),
+                            baseModel.barChartOwnerModel.getCalendarOwnerCountMap());
+                    break;
+                }
             }
         }
 
@@ -136,6 +160,8 @@ public class MultiViewTypeAdapter extends RecyclerView.Adapter {
                 return BaseModel.BAR_CHART_TYPE;
             case 2:
                 return BaseModel.LINE_CHART_TYPE;
+            case 3:
+                return BaseModel.BAR_CHART_TYPE_OWNER;
             default:
                 return -1;
         }

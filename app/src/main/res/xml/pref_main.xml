@@ -3,18 +3,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <PreferenceCategory android:title="Total Hours Spent Meter">
-        <EditTextPreference
-            android:defaultValue="8"
-            android:key="default_daily_hours"
-            android:summary="1"
-            android:inputType="number"
-            android:title="Enter your daily working hours" />
-
+    <PreferenceCategory android:title="General">
         <CheckBoxPreference
             android:defaultValue="true"
             android:key="default_acceptance_criteria"
             android:title="Include Only Accepted Events" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Total Hours Spent Meter">
+        <EditTextPreference
+            android:defaultValue="8"
+            android:inputType="number"
+            android:key="default_daily_hours"
+            android:summary="8"
+            android:title="Enter your daily working hours" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="Time Consuming Events Graph">
@@ -25,6 +27,13 @@
             android:key="max_x_axis_events"
             android:summary="10"
             android:title="Maximum Number of Events in X Axis" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Top Contributors Count">
+        <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="default_self_scheduled"
+            android:title="Exclude Self Scheduled Events" />
     </PreferenceCategory>
 
 </PreferenceScreen>

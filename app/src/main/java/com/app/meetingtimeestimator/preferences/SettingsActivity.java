@@ -55,7 +55,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     }
                 } else if (preference instanceof CheckBoxPreference) {
                     if (preference.getKey().equals("default_acceptance_criteria")) {
-                        preference.setDefaultValue(false);
+                        preference.setDefaultValue(true);
+                    }
+                    if (preference.getKey().equals("default_self_scheduled")) {
+                        preference.setDefaultValue(true);
                     }
                 }
                 return true;

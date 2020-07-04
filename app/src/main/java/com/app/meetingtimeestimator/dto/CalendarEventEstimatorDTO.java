@@ -14,6 +14,9 @@ public class CalendarEventEstimatorDTO {
     HashMap<String, Integer> confirmedCalendarNameCountMap;
     LinkedHashMap<String, Float> confirmedCalendarTimeMap;
     LinkedHashMap<String, Float> totalCalendarTimeMap;
+    HashMap<String, Integer> totalCalendarOwnerCountMap;
+    HashMap<String, Integer> confirmedCalendarOwnerCountMap;
+
 
 
     public CalendarEventEstimatorDTO() {
@@ -89,5 +92,21 @@ public class CalendarEventEstimatorDTO {
 
     public void setTotalCalendarTimeMap(LinkedHashMap<String, Float> totalCalendarTimeMap) {
         this.totalCalendarTimeMap = totalCalendarTimeMap;
+    }
+
+    public HashMap<String, Integer> getTotalCalendarOwnerCountMap() {
+        return totalCalendarOwnerCountMap;
+    }
+
+    public void setTotalCalendarOwnerCountMap(HashMap<String, Integer> totalCalendarOwnerCountMap) {
+        this.totalCalendarOwnerCountMap = totalCalendarOwnerCountMap;
+    }
+
+    public HashMap<String, Integer> getConfirmedCalendarOwnerCountMap() {
+        return confirmedCalendarOwnerCountMap;
+    }
+
+    public void setConfirmedCalendarOwnerCountMap(HashMap<String, Integer> confirmedCalendarOwnerCountMap) {
+        this.confirmedCalendarOwnerCountMap = confirmedCalendarOwnerCountMap;
     }
 }
